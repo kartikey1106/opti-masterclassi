@@ -31,12 +31,13 @@ export function Header({ settings }: { settings?: CmsSettings }) {
   const header = ((config?.GlobalHeaderSettings as Array<Record<string, unknown>> | undefined) ?? [])[0] as Record<string, unknown> | undefined;
   const site = ((config?.GlobalSiteSettings as Array<Record<string, unknown>> | undefined) ?? [])[0] as Record<string, unknown> | undefined;
   const navItems = (header?.navItems as Array<Record<string, unknown>> | undefined) ?? [
-    { title: "Services", url: "/services" },
+    { title: "Home", url: "/" },
     { title: "Find Doctors", url: "/doctors" },
+    { title: "Specialties", url: "/specialties" },
     { title: "Locations", url: "/locations" },
     { title: "Telehealth", url: "/telehealth" },
+    { title: "Health Library", url: "/health-library" },
     { title: "About Us", url: "/about" },
-    { title: "Contact", url: "/contact" },
   ];
   const siteName = String(site?.siteName ?? header?.siteName ?? "DoctorCare");
   const logo = (header?.logo as Record<string, string> | undefined) ?? (site?.logo as Record<string, string> | undefined) ?? {
@@ -77,10 +78,13 @@ export function Header({ settings }: { settings?: CmsSettings }) {
         </nav>
 
         <div className="medicare-actions">
-          <span className="medicare-search" aria-hidden="true">⌕</span>
-          <Link href={String(header?.loginUrl ?? "/login")} className="medicare-login">
-            {String(header?.loginText ?? "Login")}
-          </Link>
+          <div className="medicare-support">
+            <span className="medicare-support-icon" aria-hidden="true">☎</span>
+            <span>
+              <strong>{String(header?.supportPhone ?? "1800 123 4567")}</strong>
+              <small>{String(header?.supportLabel ?? "24/7 Support")}</small>
+            </span>
+          </div>
           <Link href={String(header?.ctaUrl ?? "/appointment")} className="medicare-header-cta">
             {String(header?.ctaText ?? "Book Appointment")}
           </Link>

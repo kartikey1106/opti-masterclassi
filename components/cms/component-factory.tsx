@@ -7,6 +7,8 @@ import { DoctorListSection } from "@/components/home/doctor-list-section";
 import { TestimonialListSection } from "@/components/home/testimonial-list-section";
 import { InsurancePartnerListSection } from "@/components/home/insurance-partner-list-section";
 import { EmergencyBanner } from "@/components/home/emergency-banner";
+import { LocationsSection } from "@/components/locations/locations-section";
+import { LocationsStatsSection } from "@/components/locations/locations-stats-section";
 
 type CmsBlock = Record<string, unknown> & { __typename?: string };
 
@@ -22,6 +24,14 @@ const componentMap: Record<string, (block: CmsBlock) => ReactNode> = {
     <InsurancePartnerListSection data={block} />
   ),
   EmergencyBannerDOC: (block) => <EmergencyBanner data={block} />,
+  LocationStatsBlockDOC: (block) => <LocationsStatsSection data={block} />,
+  LocationsStatsBlockDOC: (block) => <LocationsStatsSection data={block} />,
+  DOCLocationsBlock: (block) => <LocationsSection data={block} showHeader={false} />,
+  DOCLocationsHeroBlock: (block) => <LocationsStatsSection data={block} />,
+  LocationsListBlockDOC: (block) => <LocationsSection data={block} />,
+  LocationListBlockDOC: (block) => <LocationsSection data={block} />,
+  LocationDirectoryBlockDOC: (block) => <LocationsSection data={block} />,
+  LocationsSectionBlockDOC: (block) => <LocationsSection data={block} />,
 };
 
 export function CMSComponentFactory({ block }: { block?: CmsBlock }) {
