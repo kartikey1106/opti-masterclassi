@@ -20,6 +20,10 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Optimizely CMS preview
+
+Set the CMS website application's preview URL format to `{host}/preview?key={key}&ver={version}&loc={locale}&ctx={context}`. For local development, use `http://localhost:3000` as the application host. Enable preview tokens for the CMS website application; Optimizely supplies the `preview_token` used to fetch the selected draft. The `/preview` page requests that exact content version through Optimizely Graph and renders its homepage components.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

@@ -7,6 +7,10 @@ import { DoctorListSection } from "@/components/home/doctor-list-section";
 import { TestimonialListSection } from "@/components/home/testimonial-list-section";
 import { InsurancePartnerListSection } from "@/components/home/insurance-partner-list-section";
 import { EmergencyBanner } from "@/components/home/emergency-banner";
+import {
+  HospitalSummarySection,
+  HospitalServiceTagsSection,
+} from "@/components/hospital-summary";
 
 type CmsBlock = Record<string, unknown> & { __typename?: string };
 
@@ -22,6 +26,15 @@ const componentMap: Record<string, (block: CmsBlock) => ReactNode> = {
     <InsurancePartnerListSection data={block} />
   ),
   EmergencyBannerDOC: (block) => <EmergencyBanner data={block} />,
+  SelectedHospitalSummaryBlockDOC: (block) => (
+    <HospitalSummarySection data={block} />
+  ),
+  HospitalSummaryBlockDOC: (block) => (
+    <HospitalSummarySection data={block} />
+  ),
+  ServiceTagsBlockDOC: (block) => (
+    <HospitalServiceTagsSection data={block} />
+  ),
 };
 
 export function CMSComponentFactory({ block }: { block?: CmsBlock }) {

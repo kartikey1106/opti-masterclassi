@@ -30,10 +30,15 @@ const optimizelyFetch = async <Response, Variables = object>({
 }: OptimizelyFetch<Variables>): Promise<
   GraphqlResponse<Response> & { headers: Headers }
 > => {
-  const configHeaders = headers ?? {};
+  const configHeaders = { ...headers };
 
   if (preview) {
-    configHeaders.Authorization = `Basic ${process.env.OPTIMIZELY_PREVIEW_SECRET}`;
+    const previewSecret = process.env.OPTIMIZELY_PREVIEW_SECRET;
+    if (!previewSecret) {
+      throw new Error('OPTIMIZELY_PREVIEW_SECRET must be set when preview mode is enabled.');
+    }
+
+    configHeaders.Authorization = `Basic ${previewSecret}`;
     cache = 'no-store';
   }
 

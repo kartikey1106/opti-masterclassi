@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { draftMode } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -23,7 +24,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const globalConfig = await getGlobalConfiguration();
+  const { isEnabled } = await draftMode();
+  const globalConfig = await getGlobalConfiguration({ preview: isEnabled });
 
   return (
     <html

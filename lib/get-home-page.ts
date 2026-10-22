@@ -2,6 +2,7 @@ import { fetchOptimizely } from "./optimizely/fetch";
 
 const configuredHomePageUrl = process.env.OPTIMIZELY_START_PAGE_URL ?? "home";
 const homePageUrl = `/${configuredHomePageUrl.replace(/^\/+|\/+$/g, "")}/`;
+const configuredContentGuid = process.env.OPTIMIZELY_CONTENT_GUID?.replace(/-/g, "").toLowerCase();
 
 function toUrl(value: unknown): string {
   if (typeof value === "string") return value;
@@ -159,46 +160,78 @@ function normalizeBlock(block: Record<string, unknown>): Record<string, unknown>
         ctaUrl: toUrl(block.ButtonLink ?? block.ctaUrl),
       };
     }
+    case "SelectedHospitalSummaryBlockDOC":
+    case "HospitalSummaryBlockDOC": {
+      const doctors = Array.isArray(block.Doctors) ? block.Doctors : [];
+      return {
+        ...block,
+        __typename,
+        breadcrumbHomeLabel: block.BreadcrumbHomeLabel ?? "Home",
+        breadcrumbHomeUrl: toUrl(block.BreadcrumbHomeUrl ?? "/"),
+        breadcrumbHospitalsLabel: block.BreadcrumbHospitalsLabel ?? "Hospitals",
+        breadcrumbHospitalsUrl: toUrl(block.BreadcrumbHospitalsUrl ?? "#"),
+        breadcrumbCurrentLabel: block.BreadcrumbCurrentLabel ?? block.HospitalName ?? "",
+        saveLabel: block.SaveLabel ?? "Save hospital",
+        hospitalName: block.HospitalName ?? "",
+        tag: block.Tag ?? "",
+        rating: typeof block.Rating === "number" ? block.Rating : parseFloat(String(block.Rating ?? 0)) || 0,
+        reviewLabel: block.ReviewLabel ?? "",
+        status: block.Status ?? "",
+        phoneNumber: block.PhoneNumber ?? "",
+        address: block.Address ?? "",
+        image: toImage(block.Image ?? block.image),
+        primaryActionLabel: block.PrimaryActionLabel ?? "Book appointment",
+        primaryActionUrl: toUrl(block.PrimaryActionUrl ?? "/appointment"),
+        secondaryActionLabel: block.SecondaryActionLabel ?? "Contact hospital",
+        secondaryActionUrl: toUrl(block.SecondaryActionUrl ?? "/contact"),
+        overviewHeading: block.OverviewHeading ?? "Overview",
+        overview: block.Overview ?? "",
+        overviewItems: Array.isArray(block.OverviewItems) ? block.OverviewItems : [],
+        specialtiesHeading: block.SpecialtiesHeading ?? "Popular specialties",
+        specialties: Array.isArray(block.Specialties) ? block.Specialties : [],
+        servicesHeading: block.ServicesHeading ?? "Services",
+        services: Array.isArray(block.Services) ? block.Services : [],
+        insuranceHeading: block.InsuranceHeading ?? "Insurance accepted",
+        insurance: Array.isArray(block.Insurance) ? block.Insurance : [],
+        doctorsHeading: block.DoctorsHeading ?? "Doctors",
+        doctorsLinkLabel: block.DoctorsLinkLabel ?? "View all doctors",
+        doctorsLinkUrl: toUrl(block.DoctorsLinkUrl ?? "/doctors"),
+        doctors: doctors.map((doc) => {
+          const rec = (doc ?? {}) as Record<string, unknown>;
+          return {
+            name: rec.Name ?? rec.name ?? "",
+            role: rec.Role ?? rec.role ?? "",
+            availability: rec.Availability ?? rec.availability ?? "",
+            image: toImage(rec.Image ?? rec.image),
+          };
+        }),
+      };
+    }
+    case "ServiceTagsBlockDOC": {
+      return {
+        ...block,
+        __typename,
+        heading: block.Heading ?? block.heading ?? "Hospital services",
+        description: block.Description ?? block.description ?? "",
+        tags: Array.isArray(block.Tags) ? block.Tags : Array.isArray(block.tags) ? block.tags : [],
+      };
+    }
     default:
       return block;
   }
 }
 
-export async function getHomePage() {
-  const query = `
-    query GetHomePage($url: String!) {
-      DOCHomePage(
-        where: {
-          _or: [
-            { _metadata: { url: { default: { eq: $url } } } }
-            { _metadata: { url: { hierarchical: { eq: $url } } } }
-            { _metadata: { url: { internal: { eq: $url } } } }
-            { _metadata: { url: { graph: { eq: $url } } } }
-          ]
-        }
-      ) {
-        item {
-          _json
-        }
-      }
-    }
-  `;
-
-  const response = await fetchOptimizely<{
-    DOCHomePage?: {
-      item?: {
-        _json?: Record<string, unknown>;
-      };
-    };
-  }>(query, { url: homePageUrl });
-
-  const pageJson = response?.DOCHomePage?.item?._json as Record<string, unknown> | undefined;
+export function normalizeHomePageContent(
+  pageJson?: Record<string, unknown>,
+) {
   if (!pageJson) {
     return { _Content: { items: [] } };
   }
 
   const blocks = Array.isArray(pageJson.DOCMainContentArea)
-    ? pageJson.DOCMainContentArea.map((block) => normalizeBlock(block as Record<string, unknown>))
+    ? pageJson.DOCMainContentArea.map((block) =>
+        normalizeBlock(block as Record<string, unknown>),
+      )
     : [];
 
   return {
@@ -211,4 +244,53 @@ export async function getHomePage() {
       ],
     },
   };
+}
+
+const DEFAULT_LOCALE = "en";
+
+export async function getHomePage({ preview = false, locale = DEFAULT_LOCALE }: { preview?: boolean; locale?: string } = {}) {
+  const isDefaultLocale = locale === DEFAULT_LOCALE;
+  const localizedHomePageUrl = isDefaultLocale ? homePageUrl : `/${locale}${homePageUrl}`;
+  const query = `
+    query GetHomePage($url: String!, $guid: String, $locale: String) {
+      DOCHomePage(
+        where: {
+          _or: [
+            { _metadata: { key: { eq: $guid } } }
+            {
+              _and: [
+                { _metadata: { locale: { eq: $locale } } }
+                {
+                  _or: [
+                    { _metadata: { url: { default: { eq: $url } } } }
+                    { _metadata: { url: { hierarchical: { eq: $url } } } }
+                    { _metadata: { url: { internal: { eq: $url } } } }
+                    { _metadata: { url: { graph: { eq: $url } } } }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ) {
+        item {
+          _json
+        }
+      }
+    }`;
+
+  const response = await fetchOptimizely<{
+    DOCHomePage?: {
+      item?: {
+        _json?: Record<string, unknown>;
+      };
+    };
+  }>(query, {
+    url: localizedHomePageUrl,
+    guid: isDefaultLocale ? (configuredContentGuid ?? "") : "",
+    locale,
+  }, { preview });
+
+  const pageJson = response?.DOCHomePage?.item?._json as Record<string, unknown> | undefined;
+  return normalizeHomePageContent(pageJson);
 }

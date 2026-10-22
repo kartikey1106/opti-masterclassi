@@ -1,8 +1,10 @@
+import { draftMode } from "next/headers";
 import { CMSComponentFactory } from "@/components/cms/component-factory";
 import { getHomePage } from "@/lib/get-home-page";
 
 export default async function Home() {
-  const response = await getHomePage();
+  const { isEnabled } = await draftMode();
+  const response = await getHomePage({ preview: isEnabled });
   const page = response?._Content?.items?.[0] as
     | {
         DOCMainContentArea?: Array<Record<string, unknown>>;

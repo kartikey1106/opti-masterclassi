@@ -170,7 +170,7 @@ function getFooterPayload(payload: Record<string, unknown>): Record<string, unkn
   return {};
 }
 
-export async function getGlobalConfiguration() {
+export async function getGlobalConfiguration({ preview = false }: { preview?: boolean } = {}) {
   const query = `
     query GetGlobalConfiguration($guid: String!) {
       HeaderSettingsDOC(where: { _metadata: { key: { eq: $guid } } }) {
@@ -198,7 +198,7 @@ export async function getGlobalConfiguration() {
     HeaderSettingsDOC?: { item?: { _json?: Record<string, unknown> } | null };
     GlobalSettings?: { item?: { _json?: Record<string, unknown> } | null };
     LayoutSettings?: { item?: { _json?: Record<string, unknown> } | null };
-  }>(query, { guid: globalConfigGuid });
+  }>(query, { guid: globalConfigGuid }, { preview });
 
   const headerJson = result.HeaderSettingsDOC?.item?._json ?? {};
   const globalSettingsJson = result.GlobalSettings?.item?._json ?? {};
